@@ -48,7 +48,11 @@
 
 ## 🔓 Lỗ Hổng Bảo Mật
 
-Dự án tập trung vào **4 lỗ hổng bảo mật chính** được thiết kế để học tập và nghiên cứu. Chi tiết đầy đủ xem tại [VULNERABILITIES.md](VULNERABILITIES.md).
+Dự án tập trung vào **4 lỗ hổng bảo mật chính** được thiết kế để học tập và nghiên cứu. 
+
+📚 **Tài liệu liên quan**:
+- [VULNERABILITIES.md](VULNERABILITIES.md) - Chi tiết các lỗ hổng và cách khai thác
+- [SECURITY_FIXES.md](SECURITY_FIXES.md) - Hướng dẫn khắc phục từng lỗ hổng
 
 ### 📋 Tổng Quan 4 Lỗ Hổng
 
@@ -224,7 +228,8 @@ vulnerable-shop/
 ├── logout.php                 # Đăng xuất
 ├── test_sql.php               # Test SQL injection
 ├── README.md                  # Tài liệu này
-└── VULNERABILITIES.md         # Chi tiết lỗ hổng bảo mật
+├── VULNERABILITIES.md         # Chi tiết lỗ hổng bảo mật
+└── SECURITY_FIXES.md          # Hướng dẫn khắc phục lỗ hổng
 ```
 
 ## 🎯 Demo Khai Thác
@@ -260,13 +265,20 @@ Sử dụng Burp Suite Intruder:
 
 ## 🛡️ Khắc Phục Lỗ Hổng
 
-**Lưu ý**: Để học tập, hãy tự thực hành fix các lỗ hổng. Gợi ý:
+Xem hướng dẫn chi tiết cách khắc phục từng lỗ hổng tại **[SECURITY_FIXES.md](SECURITY_FIXES.md)** với:
 
-1. **SQL Injection**: Sử dụng Prepared Statements (PDO)
+- ✅ Code before/after cho từng lỗ hổng
+- ✅ Giải thích từng bước
+- ✅ Multiple phương pháp fix (basic → advanced)
+- ✅ Best practices và testing checklist
+
+**Gợi ý nhanh**:
+
+1. **SQL Injection**: Sử dụng Prepared Statements (PDO/MySQLi)
 2. **Password Storage**: Hash với `password_hash()` và `password_verify()`
-3. **Brute Force**: Implement rate limiting, CAPTCHA
+3. **Brute Force**: Implement rate limiting + CAPTCHA
 4. **IDOR**: Kiểm tra quyền sở hữu tài nguyên
-5. **XSS**: Escape output với `htmlspecialchars()`
+5. **Data Validation**: Validate & sanitize tất cả input
 
 ## 🤝 Đóng Góp
 
