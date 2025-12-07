@@ -48,32 +48,93 @@
 
 ## 🔓 Lỗ Hổng Bảo Mật
 
-Dự án này chứa các lỗ hổng bảo mật sau (chi tiết trong [VULNERABILITIES.md](VULNERABILITIES.md)):
+Dự án tập trung vào **4 lỗ hổng bảo mật chính** được thiết kế để học tập và nghiên cứu. Chi tiết đầy đủ xem tại [VULNERABILITIES.md](VULNERABILITIES.md).
 
-### 1. SQL Injection ⚠️ **Critical**
-- **Vị trí**: `products.php` (tham số `search`)
-- **Mô tả**: Tìm kiếm sản phẩm không sanitize input, cho phép khai thác UNION-based SQL Injection
-- **Impact**: Dump toàn bộ database, bypass authentication
+### 📋 Tổng Quan 4 Lỗ Hổng
 
-### 2. Insecure Password Storage 🔑 **High**
-- **Vị trí**: Bảng `users` trong database
-- **Mô tả**: Mật khẩu lưu dạng plaintext (không mã hóa)
-- **Impact**: Attacker có thể đọc trực tiếp mật khẩu nếu có quyền truy cập database
+| # | Chức năng | Lỗ hổng | Mức độ | File |
+|---|-----------|---------|--------|------|
+| 1 | Đăng ký - Đăng nhập | Brute Force, SQL Injection, Plaintext Password | 🔴 Critical | `login.php`, `register.php` |
+| 2 | Tìm kiếm sản phẩm | SQL Injection | 🔴 Critical | `products.php` |
+| 3 | Quản lý đơn hàng | IDOR | 🟠 High | `order_detail.php` |
+| 4 | Quản lý sản phẩm | Data Validation Issues | 🟡 Medium | `admin/products_manage.php` |
 
-### 3. Brute Force Attack 🔨 **Medium**
-- **Vị trí**: `login.php`
-- **Mô tả**: Không có rate limiting, không có CAPTCHA
-- **Impact**: Attacker có thể brute force password với tools như Hydra, Burp Suite
+---
 
-### 4. Insecure Direct Object Reference (IDOR) 🎯 **High**
-- **Vị trí**: `order_detail.php` (tham số `id`)
-- **Mô tả**: Không kiểm tra quyền sở hữu đơn hàng
-- **Impact**: User có thể xem đơn hàng của người khác bằng cách thay đổi ID
+### 🔐 1. Lỗ Hổng Đăng Ký - Đăng Nhập
 
-### 5. Reflected XSS 💉 **Medium**
-- **Vị trí**: Các trang có output trực tiếp từ GET/POST parameters
-- **Mô tả**: Input không được escape trước khi hiển thị
-- **Impact**: Thực thi JavaScript độc hại trên trình duyệt nạn nhân
+**Chức năng**: Đăng ký tài khoản và đăng nhập hệ thống  
+**Files**: `login.php`, `register.php`
+
+#### Rủi ro A: Brute Force Attack 🔨
+- ❌ Không có rate limiting
+- ❌ Không có CAPTCHA  
+- ❌ Không khóa tài khoản sau N lần sai
+- **Impact**: Chiếm quyền tài khoản, kể cả admin
+
+#### Rủi ro B: SQL Injection trong Login
+- ❌ Input không được sanitize
+- ❌ Không dùng Prepared Statements
+- **Payload mẫu**: `admin' OR '1'='1' --`
+- **Impact**: Bypass authentication hoàn toàn
+
+#### Rủi ro C: Plaintext Password Storage 🔑
+- ❌ Mật khẩu lưu dạng plaintext (không hash)
+- ❌ Vi phạm nguyên tắc bảo mật cơ bản
+- **Impact**: Database leak → tất cả password bị lộ
+
+---
+
+### 🔍 2. Lỗ Hổng Tìm Kiếm Sản Phẩm
+
+**Chức năng**: Tìm kiếm sản phẩm theo tên/mô tả  
+**File**: `products.php`
+
+#### SQL Injection (UNION-based) ⚠️
+- ❌ Tham số `search` không được validate
+- ❌ Concatenation trực tiếp vào SQL query
+- **Payload dump users**:
+  ```
+  %' UNION SELECT id,CONCAT('User: ',username),CONCAT('Pass: ',password),0,0,'leaked',email,phone,created_at FROM users#
+  ```
+- **Impact**: 
+  - Lộ toàn bộ database (users, orders, products)
+  - Lộ password plaintext
+  - Lộ cấu trúc database
+
+---
+
+### 📦 3. Lỗ Hổng Quản Lý Đơn Hàng
+
+**Chức năng**: Xem chi tiết đơn hàng  
+**File**: `order_detail.php`
+
+#### IDOR (Insecure Direct Object Reference) 🎯
+- ❌ Không kiểm tra quyền sở hữu đơn hàng
+- ❌ User có thể xem đơn của người khác bằng cách đổi `id` trên URL
+- **Demo**: `order_detail.php?id=1` → `order_detail.php?id=2`
+- **Impact**:
+  - Vi phạm quyền riêng tư
+  - Lộ địa chỉ, số điện thoại khách hàng
+  - Lộ thói quen mua hàng
+
+---
+
+### 🛠️ 4. Lỗ Hổng Quản Lý Sản Phẩm
+
+**Chức năng**: Thêm/sửa sản phẩm (Admin)  
+**File**: `admin/products_manage.php`
+
+#### Data Validation & Integrity Issues 🟡
+- ❌ Không validate giá (có thể âm hoặc = 0)
+- ❌ Không validate tồn kho (có thể âm)
+- ❌ Không sanitize mô tả (XSS risk)
+- ❌ SQL Injection trong admin panel
+- **Impact**:
+  - Thiệt hại tài chính (giá âm/0)
+  - Mất uy tín (thông tin sai lệch)
+  - Khiếu nại, trả hàng
+  - XSS → Chiếm quyền admin khác
 
 ## 💻 Yêu Cầu Hệ Thống
 
@@ -131,35 +192,7 @@ Mở trình duyệt và truy cập:
 - **Trang chủ**: [http://localhost/vulnerable-shop/](http://localhost/vulnerable-shop/)
 - **Admin Panel**: [http://localhost/vulnerable-shop/admin/](http://localhost/vulnerable-shop/admin/)
 
-## 📖 Hướng Dẫn Sử Dụng
-
-### Đăng Ký và Đăng Nhập
-
-1. Truy cập trang đăng ký: `register.php`
-2. Điền thông tin (username, password, email, v.v.)
-3. Đăng nhập tại `login.php`
-
-### Mua Hàng
-
-1. Browse sản phẩm tại `products.php` hoặc `index.php`
-2. Click vào sản phẩm để xem chi tiết
-3. Thêm vào giỏ hàng
-4. Xem giỏ hàng tại `cart.php`
-5. Checkout và hoàn tất đơn hàng
-
-### Quản Trị (Admin)
-
-1. Đăng nhập với tài khoản admin
-2. Truy cập `/admin/products_manage.php`
-3. Thêm, sửa, xóa sản phẩm
-
-## 🔑 Tài Khoản Mặc Định
-
-| Username | Password | Role | Email |
-|----------|----------|------|-------|
-| `admin` | `admin123` | Admin | admin@shop.com |
-| `user1` | `password123` | User | user1@email.com |
-| `user2` | `mypass456` | User | user2@email.com |
+## 📖 Hướng Dẫn Sử Dụng 
 
 ## 📁 Cấu Trúc Dự Án
 
