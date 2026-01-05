@@ -53,6 +53,18 @@ CREATE TABLE order_items (
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+-- Bảng reviews
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    user_id INT NOT NULL,
+    rating INT NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Insert dữ liệu mẫu
 
 -- Users (mật khẩu plaintext!)
@@ -95,3 +107,11 @@ INSERT INTO orders (user_id, total_amount, status, shipping_address) VALUES
 
 INSERT INTO order_items (order_id, product_id, quantity, price) VALUES
 (4, 7, 2, 450000);
+
+-- Reviews (dữ liệu mẫu)
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES 
+(1, 1, 5, 'Sản phẩm chất lượng cao, khuyên dùng! - Quản trị viên'),
+(1, 2, 5, 'Áo rất đẹp, vải mát, mặc rất thích!'),
+(1, 3, 4, 'Giao hàng nhanh, đóng gói cẩn thận. Áo hơi rộng một chút.'),
+(2, 2, 5, 'Sơ mi form đẹp, rất hợp đi làm.'),
+(3, 3, 3, 'Quần hơi dài so với mình, nhưng chất lượng ổn.');

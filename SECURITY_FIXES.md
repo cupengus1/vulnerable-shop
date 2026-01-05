@@ -11,7 +11,8 @@
 - [2. Fix SQL Injection trong Tìm Kiếm](#2-fix-sql-injection-trong-tìm-kiếm)
 - [3. Fix IDOR trong Quản Lý Đơn Hàng](#3-fix-idor-trong-quản-lý-đơn-hàng)
 - [4. Fix Data Validation trong Quản Lý Sản Phẩm](#4-fix-data-validation-trong-quản-lý-sản-phẩm)
-- [5. Best Practices Tổng Hợp](#5-best-practices-tổng-hợp)
+- [5. Fix Lỗ Hổng trong Đánh Giá Sản Phẩm](#5-fix-lỗ-hổng-trong-đánh-giá-sản-phẩm)
+- [6. Best Practices Tổng Hợp](#6-best-practices-tổng-hợp)
 
 ---
 
@@ -1399,6 +1400,49 @@ try {
 // DB_PASS=secure_password_here
 // DB_NAME=shop_db
 ?>
+```
+
+---
+
+## 5. Fix Lỗ Hổng trong Đánh Giá Sản Phẩm
+
+### 5.1. Fix Stored XSS
+
+#### 📍 Vị trí: `product_detail.php`
+
+#### ❌ Code Dễ Bị Tấn Công:
+```php
+<p class="mb-1"><?php echo $review['comment']; ?></p>
+```
+
+#### ✅ Code An Toàn:
+Sử dụng `htmlspecialchars()` để mã hóa các ký tự đặc biệt của HTML trước khi in ra trình duyệt.
+```php
+<p class="mb-1"><?php echo htmlspecialchars($review['comment']); ?></p>
+```
+
+### 5.2. Fix User Enumeration
+
+#### 📍 Vị trí: `product_detail.php`
+
+#### ❌ Code Dễ Bị Tấn Công:
+```php
+<div class="fw-bold text-primary">
+    <i class="bi bi-person-circle me-1"></i>
+    <?php echo $review['username']; ?>
+</div>
+```
+
+#### ✅ Code An Toàn:
+Sử dụng tên đầy đủ (`full_name`) hoặc ẩn bớt ký tự của `username`.
+```php
+<div class="fw-bold text-primary">
+    <i class="bi bi-person-circle me-1"></i>
+    <?php 
+        $display_name = !empty($review['full_name']) ? $review['full_name'] : substr($review['username'], 0, 2) . '***';
+        echo htmlspecialchars($display_name); 
+    ?>
+</div>
 ```
 
 ---

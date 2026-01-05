@@ -1,50 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Header</title>
-</head>
-<body>
-    <header class="site-header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <a href="/vulnerable-shop/index.php">
-                        <h1>🛍️ Fashion Shop</h1>
-                    </a>
-                </div>
-                
-                <nav class="main-nav">
-                    <a href="/vulnerable-shop/index.php">Trang Chủ</a>
-                    <a href="/vulnerable-shop/products.php">Sản Phẩm</a>
-                    <a href="/vulnerable-shop/cart.php">
-                        🛒 Giỏ Hàng 
-                        <?php 
-                        $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
-                        if ($cart_count > 0): 
-                        ?>
-                            <span style="background: #e74c3c; color: white; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; margin-left: 0.3rem;"><?php echo $cart_count; ?></span>
-                        <?php endif; ?>
-                    </a>
-                    
-                    <?php if (isLoggedIn()): ?>
-                        <a href="/vulnerable-shop/orders.php">Đơn Hàng</a>
-                        
-                        <?php if (isAdmin()): ?>
-                            <a href="/vulnerable-shop/admin/products_manage.php">Quản Lý SP</a>
-                        <?php endif; ?>
-                        
-                        <div class="user-menu">
-                            <span>Xin chào, <?php echo getCurrentUsername(); ?></span>
-                            <a href="/vulnerable-shop/logout.php" class="btn btn-sm btn-secondary">Đăng Xuất</a>
-                        </div>
-                    <?php else: ?>
-                        <a href="/vulnerable-shop/login.php">Đăng Nhập</a>
-                        <a href="/vulnerable-shop/register.php">Đăng Ký</a>
+<?php
+// includes/header.php
+?>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/vulnerable-shop/index.php">
+            <span class="fs-3 me-2">🛍️</span>
+            <span class="fw-bold">Fashion Shop</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/vulnerable-shop/index.php">Trang Chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vulnerable-shop/products.php">Sản Phẩm</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <a href="/vulnerable-shop/cart.php" class="btn btn-outline-light me-3 position-relative">
+                    🛒 Giỏ Hàng
+                    <?php 
+                    $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
+                    if ($cart_count > 0): 
+                    ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <?php echo $cart_count; ?>
+                        </span>
                     <?php endif; ?>
-                </nav>
+                </a>
+                
+                <?php if (isLoggedIn()): ?>
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            👤 <?php echo htmlspecialchars(getCurrentUsername()); ?>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/vulnerable-shop/orders.php">Đơn Hàng của tôi</a></li>
+                            <?php if (isAdmin()): ?>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-primary" href="/vulnerable-shop/admin/products_manage.php">Quản Lý Sản Phẩm</a></li>
+                                <li><a class="dropdown-item text-danger" href="/vulnerable-shop/dos_test.php">Demo Lỗ Hổng DoS</a></li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/vulnerable-shop/logout.php">Đăng Xuất</a></li>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <a href="/vulnerable-shop/login.php" class="btn btn-outline-light me-2">Đăng Nhập</a>
+                    <a href="/vulnerable-shop/register.php" class="btn btn-primary">Đăng Ký</a>
+                <?php endif; ?>
             </div>
         </div>
-    </header>
-</body>
-</html>
+    </div>
+</nav>

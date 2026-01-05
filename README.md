@@ -35,6 +35,7 @@
 - ✅ Xem danh sách sản phẩm theo danh mục
 - ✅ Tìm kiếm sản phẩm
 - ✅ Xem chi tiết sản phẩm
+- ✅ Đánh giá sản phẩm (Rating & Comment)
 - ✅ Thêm sản phẩm vào giỏ hàng
 - ✅ Quản lý giỏ hàng (thêm, xóa, cập nhật số lượng)
 - ✅ Đặt hàng và thanh toán (COD)
@@ -48,13 +49,13 @@
 
 ## 🔓 Lỗ Hổng Bảo Mật
 
-Dự án tập trung vào **4 lỗ hổng bảo mật chính** được thiết kế để học tập và nghiên cứu. 
+Dự án tập trung vào **6 lỗ hổng bảo mật chính** được thiết kế để học tập và nghiên cứu. 
 
 📚 **Tài liệu liên quan**:
 - [VULNERABILITIES.md](VULNERABILITIES.md) - Chi tiết các lỗ hổng và cách khai thác
 - [SECURITY_FIXES.md](SECURITY_FIXES.md) - Hướng dẫn khắc phục từng lỗ hổng
 
-### 📋 Tổng Quan 4 Lỗ Hổng
+### 📋 Tổng Quan 6 Lỗ Hổng
 
 | # | Chức năng | Lỗ hổng | Mức độ | File |
 |---|-----------|---------|--------|------|
@@ -62,6 +63,8 @@ Dự án tập trung vào **4 lỗ hổng bảo mật chính** được thiết 
 | 2 | Tìm kiếm sản phẩm | SQL Injection | 🔴 Critical | `products.php` |
 | 3 | Quản lý đơn hàng | IDOR | 🟠 High | `order_detail.php` |
 | 4 | Quản lý sản phẩm | Data Validation Issues | 🟡 Medium | `admin/products_manage.php` |
+| 5 | Đánh giá sản phẩm | Stored XSS, User Enumeration | 🔴 Critical | `product_detail.php` |
+| 6 | Toàn hệ thống | Denial of Service (DoS) | 🟠 High | `products.php`, `dos_test.php` |
 
 ---
 
